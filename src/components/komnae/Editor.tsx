@@ -253,14 +253,18 @@ export function Editor({
           className="absolute z-30 w-[300px] rounded-2xl border border-border bg-popover p-4 text-popover-foreground shadow-[var(--shadow-pop)]"
           style={{ top: popover.top, left: popover.left }}
         >
-          <button
-            type="button"
-            disabled={aiRunning}
-            onClick={() => onAccept(issue, issue.suggestion)}
-            className="w-full rounded-xl bg-primary px-4 py-3 text-lg font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {issue.suggestion}
-          </button>
+          {/* No suggestion means nothing to accept. Rendering the button
+              anyway leaves an empty coloured bar that looks broken. */}
+          {issue.suggestion && (
+            <button
+              type="button"
+              disabled={aiRunning}
+              onClick={() => onAccept(issue, issue.suggestion)}
+              className="w-full rounded-xl bg-primary px-4 py-3 text-lg font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {issue.suggestion}
+            </button>
+          )}
           {aiRunning && (
             <p className="mt-2 text-xs text-muted-foreground">AI កំពុងពិនិត្យ សូមរង់ចាំ...</p>
           )}
