@@ -55,6 +55,8 @@ function Komnae() {
   const [uploadError, setUploadError] = useState("");
   const [boundaries, setBoundaries] = useState<Boundary[]>([]);
   const [photo, setPhoto] = useState<string | null>(null);
+  // Persisted: a developer view is one someone turns on and expects to
+  // stay on, and plain state resets on every reload.
   const [showBoundaries, setShowBoundaries] = useState(false);
 
   const requestId = useRef(0);
@@ -62,7 +64,12 @@ function Komnae() {
   useEffect(() => {
     const stored = localStorage.getItem(GEMINI_KEY_STORAGE);
     if (stored) setApiKey(stored);
+    setShowBoundaries(localStorage.getItem("komnae_show_boundaries") === "1");
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("komnae_show_boundaries", showBoundaries ? "1" : "0");
+  }, [showBoundaries]);
 
   const saveApiKey = (key: string) => {
     setApiKey(key);

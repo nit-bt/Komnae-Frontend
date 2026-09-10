@@ -317,3 +317,11 @@ body {
 /* overflow-x on html breaks position: sticky, because it makes the
    element a scroll container. Clipping on body alone keeps both. */
 body { overflow-x: clip; max-width: 100%; }
+
+
+/* Preserve consecutive spaces and manual line breaks in the writing surface.
+   Without this the browser collapses them and typing two spaces yields one. */
+.komnae-editor {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

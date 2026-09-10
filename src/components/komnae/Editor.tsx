@@ -63,7 +63,13 @@ function buildHtml(text: string, issues: Issue[], marks: number[]) {
     cursor = issue.end;
   });
   html += emit(text, cursor, text.length, marks);
-  return html.replace(/\n/g, "<br>");
+
+  // No <br> conversion. The caret restore walks text nodes to count
+  // characters, and a <br> is an element: it contributes nothing to that walk
+  // while getCaretOffset counted it as one, so the caret drifted a character
+  // per line break. white-space: pre-wrap renders a plain newline instead,
+  // and a newline is a text node the walker can count.
+  return html;
 }
 
 function getCaretOffset(root: HTMLElement): number | null {
@@ -141,8 +147,34 @@ export function Editor({
   const readText = useCallback(() => {
     const root = ref.current;
     if (!root) return "";
-    return root.innerText.replace(/\u00a0/g, " ").replace(/\n$/, "");
+    // textContent, not innerText: innerText collapses runs of whitespace,
+    // so a second space typed in a row never reaches the document. Browsers
+    // insert a non-breaking space for the second one, which is converted back
+    // to a plain space here rather than left to corrupt offsets.
+    return root.textContent?.replace(/\u00a0/g, " ") ?? "";
   }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    // Browsers insert either <br> or a wrapping <div> for Enter, and which
+    // one you get varies. Both break the character-offset maths the caret
+    // restore depends on, so put a plain newline in instead and let
+    // white-space: pre-wrap render it.
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    const node = document.createTextNode("\n");
+    range.insertNode(node);
+    range.setStartAfter(node);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    onChangeText(readText());
+  };
 
   const handleInput = () => {
     setPopover(null);
@@ -199,6 +231,7 @@ export function Editor({
         aria-label="ផ្ទាំងសរសេរ"
         data-empty={text.length === 0}
         onInput={handleInput}
+        onKeyDown={handleKeyDown}
         onClick={handleClick}
         className="komnae-editor min-h-[320px] outline-none"
       />
